@@ -6,7 +6,8 @@
 	"scripts": {
 		"build": "tsc",
 		"buildMapped": "tsc --sourceMap",
-		"test": "node tests/test1.js"
+		"test": "node tests/test1.js",
+		"test-irv": "node tests/test-irv.js"
 	},
 	"repository": {
 		"type": "git",

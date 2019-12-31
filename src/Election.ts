@@ -8,6 +8,8 @@ import Candidate from './Candidate';
 import { state } from "./utils/errors";
 import Ballot from "./irv/Ballot";
 import VoteMethods from './Vote';
+import Count from './irv/Count';
+import { ResultsDictionary } from './irv/interfaces';
 
 // An election is defined as a group of election parameters surrounding a set of 'races'
 
@@ -105,6 +107,10 @@ export default class Election {
 	public votes: {
 		[key: string]: Vote
 	} = {};
+
+	public results?: {
+		[key: string]: Count
+	};
 
 	constructor(id: string) {
 		this.id = id;
@@ -334,6 +340,17 @@ export default class Election {
 				});
 			})
 		);		
+		return this;
+	}
+
+	public countVotes() {
+		this.setState('count', true);
+		let results = {} as {[key: string]: Count};
+		for (let [id, race] of Object.entries(this.races)) {
+			results[id] = new Count(Object.keys(race.candidates), Object.values(race.validVotes).map(vote => vote.slice(1) as string[]));
+			results[id].rank();
+		}
+		this.results = results;
 		return this;
 	}
 

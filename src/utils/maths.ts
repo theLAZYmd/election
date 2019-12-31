@@ -32,3 +32,22 @@ export function clean<T>(arr: T[]): T[] {
 	}
 	return arr;
 }
+
+export function combine(arr: any[], r: number): any[][] {
+	let results = [] as any[][];
+	let n = arr.length;
+	function recursive(need: number, s: number, res: any[]) {
+		if (need === 0) {
+			let b = res.slice(0);
+			results.push(b);
+			return;
+		}
+		for (let i = s; i < n; i++ ){
+			let b = res.slice(0);
+			b.push(arr[i]); 
+			recursive(need - 1, i + 1, b);
+		}
+	}	
+	recursive(r, 0, []);
+	return results;
+}

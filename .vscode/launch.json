@@ -28,6 +28,31 @@
 			"outFiles": [
 				"${workspaceFolder}/**/*.js"
 			]
+		},		
+		{
+			"type": "node",
+			"request": "launch",
+			"name": "Test-IRV",
+			"skipFiles": [
+				"<node_internals>/**"
+			],
+			"preLaunchTask": "npm: buildMapped",
+			"program": "${workspaceFolder}\\tests\\test-irv.js",
+			"outFiles": [
+				"${workspaceFolder}/**/*.js"
+			]
+		},		
+		{
+			"type": "node",
+			"request": "launch",
+			"name": "Quick Test-IRV",
+			"skipFiles": [
+				"<node_internals>/**"
+			],
+			"program": "${workspaceFolder}\\tests\\test-irv.js",
+			"outFiles": [
+				"${workspaceFolder}/**/*.js"
+			]
 		}
 	]
 }
