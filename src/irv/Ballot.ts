@@ -46,7 +46,7 @@ export default class Ballot {
 				}
 				return true;
 			});
-			let votingString = shuffle(candidates).map((c) => '[] ' + c.name + '\n');
+			let votingString = shuffle(candidates).map((c) => '[] ' + c.name).join('\n');
 			fields.push({
 				name: `#${r.name} Ballot:`,
 				value: '```css\n' +
@@ -68,6 +68,17 @@ export default class Ballot {
 
 	get color(): number {
 		return Ballot.color;
+	}
+
+	toJSON() {
+		return {
+			title: this.title,
+			url: this.url,
+			description: this.description,
+			fields: this.fields,
+			footer: this.footer,
+			color: this.color
+		};
 	}
 
 }

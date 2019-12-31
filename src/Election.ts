@@ -286,26 +286,26 @@ export default class Election {
 		return this;
 	}
 
-	public sendTestBallot(voter: Voter, mobile: boolean, races: Race[]): void {
+	public sendTestBallot(voter: Voter, mobile: boolean, races: Race[]): Ballot {
 		if (!this.states.register) throw state.register.ballots;
 		if (!this.states.voting && mobile) throw state.voting.ballots;
-		this.sendBallot([voter], races);
+		return this.sendBallot([voter], races)[0];
 	}
 
-	public sendOneBallot(voter: Voter, mobile: boolean): void {
+	public sendOneBallot(voter: Voter, mobile: boolean): Ballot {
 		if (!this.states.voting && mobile) throw state.voting.ballots;
 		let races = Object.keys(voter.votes).map(id => this.races[id]);
-		this.sendBallot([voter], races);
+		return this.sendBallot([voter], races)[0];
 	}
 
-	public sendAllBallots(real: boolean):void {
+	public sendAllBallots(real: boolean): Ballot[] {
 		if (!this.states.register) throw state.register.ballots;
 		if (real) {
 			if (this.states.voting) throw state.voting.any;
 			this.openVoting();
 		}
 		let voters = Object.values(this.voters);
-		this.sendBallot(voters, Object.values(this.races));
+		return this.sendBallot(voters, Object.values(this.races));
 	}
 
 	public sendBallot(voters: Voter[], races: Race[]): Ballot[] {

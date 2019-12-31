@@ -8,5 +8,3 @@ export const description = [
 	'Do not make any other modifications or your vote will constitute a spoiled ballot.',
 	'You may resubmit a ballot for up to half an hour after voting. Simply copy and paste the updated ballot into your message field.'
 ];
-
-export const regex = /^\\[(?:[0-9]*)\\]\\s(?:[\\w\\s]{2,32}#(?:[0-9]{4})|Write-In|Blank Vote)$/mg;

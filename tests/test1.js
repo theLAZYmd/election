@@ -130,6 +130,7 @@ election.getRace(antichess.id)
 
 election.closeNominations();
 
-election.openVoting();
+let ballots = election.sendAllBallots(true);
 
-fs.writeFileSync(path.join(__dirname, './output1.json'), JSON.stringify(election, null, 4));
+fs.writeFileSync(path.join(__dirname, './election.json'), JSON.stringify(election, null, 4));
+fs.writeFileSync(path.join(__dirname, './ballots.json'), JSON.stringify(ballots, null, 4));
