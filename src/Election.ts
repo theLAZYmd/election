@@ -9,7 +9,6 @@ import { state } from "./utils/errors";
 import Ballot from "./irv/Ballot";
 import VoteMethods from './Vote';
 import Count from './irv/Count';
-import { ResultsDictionary } from './irv/interfaces';
 
 // An election is defined as a group of election parameters surrounding a set of 'races'
 
