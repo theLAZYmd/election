@@ -5,7 +5,7 @@ import { Vote, Outcome, VotingErrors } from '../VoteInterfaces';
 
 export default class Parse {
 
-	constructor(private _ballot: string) {}
+	constructor(private data: string) {}
 
 	public outcome: 'fulfilled' | 'rejected' | '' = ''
 	public status: Outcome | keyof VotingErrors = '';
@@ -31,7 +31,7 @@ export default class Parse {
 	private _matches?: string[];
 	get ids(): string[] { // returns an array of the three ex: ['185412969130229760', '314155682033041408', 'racing-kings']
 		if (this._matches) return this._matches;
-		let matches = this._ballot.match(regexes.ballotHeader) || [];
+		let matches = this.data.match(regexes.ballotHeader) || [];
 		return this._matches = matches.slice(1);
 	}
 
@@ -39,11 +39,11 @@ export default class Parse {
 		return this.ids[0];
 	}
 
-	get server(): string {
+	get election(): string {
 		return this.ids[1];
 	}
 
-	get channel(): string {
+	get race(): string {
 		return this.ids[2];
 	}
 
@@ -53,7 +53,7 @@ export default class Parse {
 	private _lines?: string[]
 	get lines(): string[] {
 		if (this._lines) return this._lines;
-		return this._lines = this._ballot.match(regexes.ballotVote) || [];
+		return this._lines = this.data.match(regexes.ballotVote) || [];
 	}
 
 	// returns nested arrays of each lines placings vs name [['1', samoyd#2402'], ['', 'Gopnik#4031'], ['2', okei#1207'], ['', 'Write-In'], ['3', 'Blank Vote']]
@@ -117,8 +117,8 @@ export default class Parse {
 			if (!server) throw 'noGuild';															//changed serverID to other 18 digit code (for whatever reason)
 			if (!election.states.voting) throw 'state';					//voting period has closed
 			if (!election.type) throw 'state';
-			if (!(this.channel in election.races)) throw 'noElection';
-			let race = election.races[this.channel];					//changed channel (election) name to something invalid
+			if (!(this.race in election.races)) throw 'noElection';
+			let race = election.races[this.race];					//changed channel (election) name to something invalid
 			if (!(this.voter in race.voters)) throw 'ineligible';		//changed channel name to other election not eligible for
 			if (this.zeroes) throw 'zeroes';							//added a zero [0] option
 			if (this.writeIn) throw 'badWriteIn';						//added a number [1] to 'Wrote-In'
@@ -144,6 +144,10 @@ export default class Parse {
 		} catch (e) {
 			return Promise.reject(e);
 		}
+	}
+
+	toJSON() {
+		return this.votes;
 	}
 
 }

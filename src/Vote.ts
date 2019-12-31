@@ -31,7 +31,7 @@ export default class VoteMethods {
 			return vote.validate(server, voter, this.election)
 				.then((outcome) => vote.setOutcome('fulfilled')
 					.setStatus(outcome)
-					.setMessage(this.resolve(outcome, voter, vote.channel))
+					.setMessage(this.resolve(outcome, voter, vote.race))
 				)
 				.catch((e: keyof VotingErrors) => vote.setOutcome('rejected')
 					.setStatus(e)

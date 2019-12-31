@@ -1,12 +1,13 @@
-import { Setting, System, Threshold, States, InfoField } from "./ElectionInterfaces";
+import { Setting, System, Threshold, States, InfoField } from './ElectionInterfaces';
+import { Vote } from './VoteInterfaces';
 import { Systems } from './utils/definitions';
 import { bold } from './utils/markdown';
 import Race from './Race';
 import Voter from './Voter';
-import Vote from './Vote';
 import Candidate from './Candidate';
 import { state } from "./utils/errors";
 import Ballot from "./irv/Ballot";
+import Parse from "./irv/Parse";
 
 // An election is defined as a group of election parameters surrounding a set of 'races' or 'results'
 
@@ -23,24 +24,27 @@ export default class Election {
 	}
 
 	public get type() {
-		let system = this.settings.find(s => s.key === 'system');
+		let system = this.settings.system as Setting<string>;
 		if (!system) throw 'Invalid settings';
-		return system.value || '';
+		return system.value;
 	}
 
 	public get plural() {
 		return Object.keys(this.races).length > 1 ? 's' : '';
 	}
 
-	public settings: Setting<any>[] = [ //default settings
-		{
-			key: 'date',
+	public settings: {[key: string]: Setting<any>} = { //default settings
+		name: {
+			value: 'Election',
+			definition: 'string',
+			title: 'Title'
+		} as Setting<string>,
+		date: {
 			value: new Date(Date.now()).getMonth(),
 			definition: 'number',
 			title: 'Date'
 		} as Setting<number>,
-		{
-			key: 'system',
+		system: {
 			value: 'irv',
 			definition: Systems.map((s: System) => s.name),
 			title: 'Voting System',
@@ -50,13 +54,12 @@ export default class Election {
 				return `[${system.name}](${system.href})`
 			}
 		} as Setting<string>,
-		{
-			key: 'type',
+		type: {
 			value: 'multi',
 			definition: ['multi', 'single'],
 			title: 'Type of election'
 		} as Setting<string>
-	];
+	};
 
 	public candidateThresholds: Threshold<Candidate>[] = [
 		{
@@ -109,10 +112,7 @@ export default class Election {
 	/* CONFIGURE SETTINGS */
 
 	public editSetting(key: string, s: Setting<any>) {
-		let index = this.settings.findIndex(v => v.key === key);
-		if (index === -1) throw 'Bad key setting to edit ' + key;
-		let prev = this.settings[index];
-		if (!s.key) s.key = key;
+		let prev = this.settings[key];
 		if (typeof prev.definition === 'string' && prev.definition !== s.definition) throw 'Bad definition ' + s.definition + ' for setting ' + prev.title;
 		if (Array.isArray(prev.definition) && JSON.stringify(prev.definition) !== JSON.stringify(s.definition)) throw 'Bad definition ' + s.definition + ' for setting ' + prev.title;
 		if (typeof s.title !== 'string') throw 'Setting title must be a string';
@@ -121,7 +121,7 @@ export default class Election {
 		} else {
 			if (typeof s.value !== s.definition) throw 'Setting value must be type ' + s.definition;
 		}
-		this.settings[index] = s;
+		this.settings[key] = s;
 		return this;
 	}
 
@@ -170,7 +170,7 @@ export default class Election {
 
 	public generateSettings(): InfoField[] {
 		let fields = [] as InfoField[];
-		for (let s of this.settings) {
+		for (let s of Object.values(this.settings)) {
 			fields.push({
 				name: s.title,
 				value: s.conversion ? s.conversion(s.value) : s.value.toString()
@@ -286,30 +286,41 @@ export default class Election {
 		return this;
 	}
 
-	public sendTestBallot(voter: Voter, mobile: boolean, races: Race[]): Ballot {
+	public generateTestBallot(voter: Voter, mobile: boolean, races: Race[]): {[key: string]: Ballot} {
 		if (!this.states.register) throw state.register.ballots;
 		if (!this.states.voting && mobile) throw state.voting.ballots;
-		return this.sendBallot([voter], races)[0];
+		return this.generateBallotDict([voter], races);
 	}
 
-	public sendOneBallot(voter: Voter, mobile: boolean): Ballot {
+	public generateOneBallot(voter: Voter, mobile: boolean): {[key: string]: Ballot} {
 		if (!this.states.voting && mobile) throw state.voting.ballots;
 		let races = Object.keys(voter.votes).map(id => this.races[id]);
-		return this.sendBallot([voter], races)[0];
+		return this.generateBallotDict([voter], races);
 	}
 
-	public sendAllBallots(real: boolean): Ballot[] {
+	public generateAllBallots(real: boolean): {[key: string]: Ballot} {
 		if (!this.states.register) throw state.register.ballots;
 		if (real) {
 			if (this.states.voting) throw state.voting.any;
 			this.openVoting();
 		}
 		let voters = Object.values(this.voters);
-		return this.sendBallot(voters, Object.values(this.races));
+		return this.generateBallotDict(voters, Object.values(this.races));
 	}
 
-	public sendBallot(voters: Voter[], races: Race[]): Ballot[] {
-		return voters.map((voter) => new Ballot(voter, races, this));
+	private generateBallotDict(voters: Voter[], races: Race[]): {[key: string]: Ballot} {
+		return voters.reduce((acc: {[key: string]: Ballot}, curr: Voter) => {
+			acc[curr.id] = new Ballot(curr, races, this);
+			return acc;
+		}, {});
+	}
+
+	public async addVoteFromBallot(voter: Voter, data: string): Promise<string> {
+		let ballot = new Parse(data);
+		let outcome = await ballot.validate(this.id, voter, this)
+		this.votes[ballot.race + '.' + voter.id] = ballot.votes;
+		this.voters[voter.id].votes[ballot.race] = ballot.votes;
+		return outcome;
 	}
 
 	/* Utility */

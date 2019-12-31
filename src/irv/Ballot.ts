@@ -3,7 +3,7 @@ import Race from '../Race';
 import Voter from '../Voter';
 import { description } from './Data';
 import Candidate from '../Candidate';
-import { Threshold, Field } from '../ElectionInterfaces';
+import { Threshold, Field, Setting } from '../ElectionInterfaces';
 import { shuffle } from '../utils/maths';
 
 export default class Ballot {
@@ -11,12 +11,10 @@ export default class Ballot {
 	static properties: string[] = [];
 	static thresholds: Threshold<Candidate>[] = []
 
-	static title: string = '';
 	static url: string = '';
 	static footer: string = '';
 	static color: number = 0;
 
-	static setTitle(title: string): void { this.title = title; }
 	static setURL(url: string): void { this.url = url; }
 	static setFooter(footer: string): void { this.footer = footer; }
 	static setColor(color: number): void { this.color = color; }
@@ -24,9 +22,10 @@ export default class Ballot {
 	constructor(private voter: Voter, private races: Race[], private election: Election) {}
 	
 	get title(): string {
-		let date = this.election.settings.find(s => s.key === 'date');
+		let name = (this.election.settings.name as Setting<string>).value || 'Election';
+		let date = (this.election.settings.date as Setting<number>).value;
 		if (!date) throw 'Election date must be defined';
-		return Ballot.title + ': ' + date.value;
+		return name + ': ' + date;
 	}
 
 	get url(): string {
@@ -67,7 +66,7 @@ export default class Ballot {
 	}
 
 	get color(): number {
-		return Ballot.color;
+		return this.voter.color || Ballot.color;
 	}
 
 	toJSON() {
