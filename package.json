@@ -1,0 +1,25 @@
+{
+	"name": "election",
+	"version": "0.0.1",
+	"description": "Backend to run an election in Node.JS",
+	"main": "dist/index.js",
+	"scripts": {
+		"build": "tsc",
+		"buildMapped": "tsc --sourceMap",
+		"test": "node tests/test1.js"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/theLAZYmd/election.git"
+	},
+	"keywords": [
+		"lazy",
+		"election"
+	],
+	"author": "theLAZYmd",
+	"license": "MIT",
+	"bugs": {
+		"url": "https://github.com/theLAZYmd/election/issues"
+	},
+	"homepage": "https://github.com/theLAZYmd/election#readme"
+}
