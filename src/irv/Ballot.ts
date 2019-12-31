@@ -13,11 +13,9 @@ export default class Ballot {
 
 	static url: string = '';
 	static footer: string = '';
-	static color: number = 0;
 
 	static setURL(url: string): void { this.url = url; }
 	static setFooter(footer: string): void { this.footer = footer; }
-	static setColor(color: number): void { this.color = color; }
 
 	constructor(private voter: Voter, private races: Race[], private election: Election) {}
 	
@@ -45,7 +43,7 @@ export default class Ballot {
 				}
 				return true;
 			});
-			let votingString = shuffle(candidates).map((c) => '[] ' + c.name).join('\n');
+			let votingString = shuffle(candidates).map((c) => '[] ' + c.name + '\n').join('');
 			fields.push({
 				name: `#${r.name} Ballot:`,
 				value: '```css\n' +
@@ -66,7 +64,9 @@ export default class Ballot {
 	}
 
 	get color(): number {
-		return this.voter.color || Ballot.color;
+		if (this.voter.color) return this.voter.color;
+		if (this.election.settings.color) return this.election.settings.color.value;
+		return 0;
 	}
 
 	toJSON() {

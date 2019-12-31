@@ -7,9 +7,9 @@ import Voter from './Voter';
 import Candidate from './Candidate';
 import { state } from "./utils/errors";
 import Ballot from "./irv/Ballot";
-import Parse from "./irv/Parse";
+import VoteMethods from './Vote';
 
-// An election is defined as a group of election parameters surrounding a set of 'races' or 'results'
+// An election is defined as a group of election parameters surrounding a set of 'races'
 
 export default class Election {
 
@@ -58,38 +58,41 @@ export default class Election {
 			value: 'multi',
 			definition: ['multi', 'single'],
 			title: 'Type of election'
-		} as Setting<string>
-	};
+		} as Setting<string>,
+		ballotColour: {
+			value: 15844367,
+			definition: 'number',
+			title: 'Default ballot colour'
+		} as Setting<number>
+	}
 
-	public candidateThresholds: Threshold<Candidate>[] = [
-		{
-			key: 'limit',
+	public candidateThresholds: {[key: string]: Threshold<Candidate>} = {
+		limit: {
 			value: '1',
 			title: 'Running limit',
 			validate: (candidate) => !candidate.races || candidate.races.length < 1,
 			error: 'Candidate is already running in a race'
 		}
-	];
+	}
 
-	public ballotThresholds: Threshold<Candidate>[] = [
-		{
+	public ballotThresholds: {[key: string]: Threshold<Candidate>} = {
+		sponsors: {
 			key: 'sponsors',
 			value: '3',
 			title: 'Required sponsors',
 			validate: (candidate) => Object.keys(candidate.sponsors).length >= 3,
 			error: 'Candidate has not reached the requisite number of sponsors'
 		}
-	];
+	};
 
-	public voterThresholds: Threshold<Voter>[] = [
-		{
-			key: 'inactives',
+	public voterThresholds: {[key: string]: Threshold<Voter>} = {
+		inactives: {
 			value: 'true',
 			title: 'Inactive members voting?',
 			validate: (voter) => voter.active !== false,
 			error: 'User is marked as inactive'
 		}
-	];
+	};
 	
 	public races: {
 		[key: string]: Race
@@ -105,16 +108,25 @@ export default class Election {
 
 	constructor(id: string) {
 		this.id = id;
-		Voter.setThresholds(this.voterThresholds);
-		Candidate.setThresholds(this.candidateThresholds);
+		Voter.setThresholds(Object.values(this.voterThresholds));
+		Candidate.setThresholds(Object.values(this.candidateThresholds));
+	}
+
+	private pendingPromises: Promise<any>[] = [];
+
+	public resolve = (): Promise<void> => {
+		return Promise.all(this.pendingPromises).then(() => {});
 	}
 
 	/* CONFIGURE SETTINGS */
 
 	public editSetting(key: string, s: Setting<any>) {
 		let prev = this.settings[key];
-		if (typeof prev.definition === 'string' && prev.definition !== s.definition) throw 'Bad definition ' + s.definition + ' for setting ' + prev.title;
-		if (Array.isArray(prev.definition) && JSON.stringify(prev.definition) !== JSON.stringify(s.definition)) throw 'Bad definition ' + s.definition + ' for setting ' + prev.title;
+		if (prev.definition) {
+			if (s.definition) throw 'Don\'t set new definition when editing a setting!';
+			s.definition = prev.definition;
+		}
+		if (!s.title && prev.title) s.title = prev.title;
 		if (typeof s.title !== 'string') throw 'Setting title must be a string';
 		if (Array.isArray(s.definition)) {
 			if (!s.definition.some(v => v === s.value)) throw 'Setting value must be one of ' + s.definition.join(',');
@@ -140,31 +152,29 @@ export default class Election {
 		return this;
 	}
 
-	public addVoterThreshold(t: Threshold<Voter>): Election {
-		this.voterThresholds.push(t);
-		Voter.setThresholds(this.voterThresholds);
+	public addVoterThreshold(key: string, t: Threshold<Voter>): Election {
+		this.voterThresholds[key] = t;
+		Voter.setThresholds(Object.values(this.voterThresholds));
 		return this;
 	}
 
 	public editVoterThreshold(key: string, t: Threshold<Voter>) {
-		let index = this.voterThresholds.findIndex(v => v.key === key);
-		if (index === -1) throw 'Bad key threshold to edit ' + key;
-		this.voterThresholds[index] = t;
-		Voter.setThresholds(this.voterThresholds);
+		if (!(key in this.voterThresholds)) throw 'Bad key threshold to edit ' + key;
+		this.voterThresholds[key] = t;
+		Voter.setThresholds(Object.values(this.voterThresholds));
 		return this;
 	}
 
-	public addCandidateThreshold(t: Threshold<Candidate>) {
-		this.candidateThresholds.push(t);
-		Candidate.setThresholds(this.candidateThresholds);
+	public addCandidateThreshold(key: string, t: Threshold<Candidate>) {
+		this.candidateThresholds[key] = t;
+		Candidate.setThresholds(Object.values(this.candidateThresholds));
 		return this;
 	}
 
 	public editCandidateThreshold(key: string, t: Threshold<Candidate>) {
-		let index = this.candidateThresholds.findIndex(v => v.key === key);
-		if (index === -1) throw 'Bad key threshold to edit ' + key;
-		this.candidateThresholds[index] = t;
-		Candidate.setThresholds(this.candidateThresholds);
+		if (!(key in this.candidateThresholds)) throw 'Bad key threshold to edit ' + key;
+		this.candidateThresholds[key] = t;
+		Candidate.setThresholds(Object.values(this.candidateThresholds));
 		return this;
 	}
 
@@ -176,13 +186,13 @@ export default class Election {
 				value: s.conversion ? s.conversion(s.value) : s.value.toString()
 			})
 		}
-		for (let s of this.candidateThresholds) {
+		for (let s of Object.values(this.candidateThresholds)) {
 			fields.push({
 				name: s.title,
 				value: s.value
 			})
 		}		
-		for (let s of this.voterThresholds) {
+		for (let s of Object.values(this.voterThresholds)) {
 			fields.push({
 				name: s.title,
 				value: s.value
@@ -315,12 +325,16 @@ export default class Election {
 		}, {});
 	}
 
-	public async addVoteFromBallot(voter: Voter, data: string): Promise<string> {
-		let ballot = new Parse(data);
-		let outcome = await ballot.validate(this.id, voter, this)
-		this.votes[ballot.race + '.' + voter.id] = ballot.votes;
-		this.voters[voter.id].votes[ballot.race] = ballot.votes;
-		return outcome;
+	public addVoteFromBallot(voter: Voter, data: string): Election {
+		this.pendingPromises.push(new VoteMethods(this).parseBallot(data, this.id, voter)
+			.then(({ successes }) => {
+				successes.forEach((ballot) => {
+					this.votes[ballot.race + '.' + voter.id] = ballot.votes;
+					this.voters[voter.id].votes[ballot.race] = ballot.votes;
+				});
+			})
+		);		
+		return this;
 	}
 
 	/* Utility */

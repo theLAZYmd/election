@@ -26,20 +26,17 @@ let election = new Election(Math.random().toString(16).slice(2))
 		'active',
 		'roles'
 	])
-	.addVoterThreshold({
-		key: 'messages',
+	.addVoterThreshold('messages', {
 		value: '100',
 		title: 'Required messages',
 		validate: (voter) => voter.messages >= 100
 	})
-	.addVoterThreshold({
-		key: 'role',
+	.addVoterThreshold('role', {
 		value: 'voting',
 		title: 'Corresponding role for voters',
 		validate: (voter, race) => voter.roles.some(r => r.toLowerCase() === race.name.toLowerCase())
 	})	
-	.addVoterThreshold({
-		key: 'duplicates',
+	.addVoterThreshold('duplicates', {
 		value: 'true',
 		title: 'Exclude duplicate accounts?',
 		validate: (voter) => !voter.roles.some(r => r.toLowerCase() === 'bank')
@@ -132,5 +129,17 @@ election.closeNominations();
 
 let ballots = election.generateAllBallots(true);
 
-fs.writeFileSync(path.join(__dirname, './election.json'), JSON.stringify(election, null, 4));
-fs.writeFileSync(path.join(__dirname, './ballots.json'), JSON.stringify(ballots, null, 4));
+election.addVoteFromBallot(election.getVoter('185412969130229760'),
+	'#VoterID: 185412969130229760\n' +
+	'#ElectionID: b0fe27716c9cd\n' +
+	'#Channel: crazyhouse\n' +
+	'[] Mark Plotkin#1754\n' +
+	'[1] bakkouz#7251\n' +
+	'[] Write-In\n' +
+	'[2] Blank Vote'
+);
+
+Promise.resolve()
+	.then(fs.writeFileSync(path.join(__dirname, './ballots.json'), JSON.stringify(ballots, null, 4)))
+	.then(() => election.resolve())
+	.then(() => fs.writeFileSync(path.join(__dirname, './election.json'), JSON.stringify(election, null, 4)));

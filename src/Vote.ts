@@ -26,7 +26,7 @@ export default class VoteMethods {
 			failures: [] as Ballot[],
 		}
 		let matches = ballots.match(regexes.ballot);
-		await Promise.all((matches || []).map(async (match): Promise<void> => {
+		await Promise.all((matches || []).map((match): Promise<void> => {
 			let vote = new Ballot(match);
 			return vote.validate(server, voter, this.election)
 				.then((outcome) => vote.setOutcome('fulfilled')

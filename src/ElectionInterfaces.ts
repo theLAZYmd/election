@@ -3,9 +3,8 @@ import Voter from './Voter'
 import Race from './Race';
 
 export interface Setting<T> {
-	key?: string,
 	value: T,
-	definition: string | any[],
+	definition?: string | any[],
 	title: string,
 	conversion?: (value: T) => string
 }
@@ -13,7 +12,7 @@ export interface Setting<T> {
 type Person = Candidate | Voter;
 
 export interface Threshold<T extends Person> {
-	key: string,
+	key?: string,
 	value: string,
 	title: string,
 	validate: (voter: T, race: Race) => boolean,

@@ -114,11 +114,11 @@ export default class Parse {
 	public validate(server: string, voter: Voter, election: Settings): Promise<Outcome> {
 		try {
 			if (this.voter !== voter.id) throw 'stolen';				//changed voterID (perhaps to another user)
-			if (!server) throw 'noGuild';															//changed serverID to other 18 digit code (for whatever reason)
+			if (!server) throw 'noGuild';														//changed serverID to other 18 digit code (for whatever reason)
 			if (!election.states.voting) throw 'state';					//voting period has closed
 			if (!election.type) throw 'state';
 			if (!(this.race in election.races)) throw 'noElection';
-			let race = election.races[this.race];					//changed channel (election) name to something invalid
+			let race = election.races[this.race];						//changed channel (election) name to something invalid
 			if (!(this.voter in race.voters)) throw 'ineligible';		//changed channel name to other election not eligible for
 			if (this.zeroes) throw 'zeroes';							//added a zero [0] option
 			if (this.writeIn) throw 'badWriteIn';						//added a number [1] to 'Wrote-In'
