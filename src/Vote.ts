@@ -17,31 +17,31 @@ export default class VoteMethods {
 		return Errors[output];
 	}
 
-	public async parseBallot(ballots: string, server: string, voter: Voter): Promise<{
+	public parseBallot(ballots: string, server: string, voter: Voter): {
 		successes: Ballot[],
 		failures: Ballot[]
-	}> {
+	} {
 		let res = {
 			successes: [] as Ballot[],
 			failures: [] as Ballot[],
 		}
-		let matches = ballots.match(regexes.ballot);
-		await Promise.all((matches || []).map((match): Promise<void> => {
+		let matches = ballots.match(regexes.ballot) || [];
+		matches.forEach((match) => {
 			let vote = new Ballot(match);
-			return vote.validate(server, voter, this.election)
-				.then((outcome) => vote.setOutcome('fulfilled')
+			try {
+				let outcome = vote.validate(server, voter, this.election)
+				vote.setOutcome('fulfilled')
 					.setStatus(outcome)
-					.setMessage(this.resolve(outcome, voter, vote.race))
-				)
-				.catch((e: keyof VotingErrors) => vote.setOutcome('rejected')
-					.setStatus(e)
-					.setMessage(this.reject(e))
-				)
-				.then((vote: Ballot) => {
-					if (vote.outcome === 'fulfilled') res.successes.push(vote);
-					else if (vote.outcome === 'rejected') res.failures.push(vote);
-				});
-		}));
+					.setMessage(this.resolve(outcome, voter, vote.race));
+			} catch (e) {
+				vote.setOutcome('rejected')
+					.setStatus(e as keyof VotingErrors)
+					.setMessage(this.reject(e as keyof VotingErrors))
+			} finally {				
+				if (vote.outcome === 'fulfilled') res.successes.push(vote);
+				else if (vote.outcome === 'rejected') res.failures.push(vote);
+			}
+		});
 		return res;
 	}
 

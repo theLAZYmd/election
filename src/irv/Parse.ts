@@ -111,38 +111,34 @@ export default class Parse {
 
 
 	//Got to account for all the 'edge cases' a user might possibly be able to do to the ballot
-	public validate(server: string, voter: Voter, election: Settings): Promise<Outcome> {
-		try {
-			if (this.voter !== voter.id) throw 'stolen';				//changed voterID (perhaps to another user)
-			if (!server) throw 'noGuild';														//changed serverID to other 18 digit code (for whatever reason)
-			if (!election.states.voting) throw 'state';					//voting period has closed
-			if (!election.type) throw 'state';
-			if (!(this.race in election.races)) throw 'noElection';
-			let race = election.races[this.race];						//changed channel (election) name to something invalid
-			if (!(this.voter in race.voters)) throw 'ineligible';		//changed channel name to other election not eligible for
-			if (this.zeroes) throw 'zeroes';							//added a zero [0] option
-			if (this.writeIn) throw 'badWriteIn';						//added a number [1] to 'Wrote-In'
-			if (this.duplicates) throw 'duplicates';					//wrote the same number next to more than one
-			if (!this.ascending) throw 'badOrder';						//added a zero [0] option
-			
-			//Check if candidates are still in the server live
-			//let votes = this.votes
-			//	.filter(vote => !vote || vote === 'blank' || this.Search.users.byTag(vote))					//so the this.votes[0] = false gets filtered to stay in
-			//	.map(vote => typeof vote === 'string' ? (vote === 'blank' ? 'blank' : this.Search.users.byTag(vote).id) : Date.now()); //here's where the date is added
-			//if (votes.length !== this.votes.length) throw 'missingUsers';
-			
-			if (race.voters[this.voter] && race.voters[this.voter][0]) {	//revote
-				if (Date.now() - race.voters[this.voter][0] > 1800000) throw 'timeout';		//trying to revote out of time (more than half a hour later)
-				else {
-					if (this.spoiled) return Promise.resolve('spoiled revote');
-					else return Promise.resolve('revote');
-				}
-			} else {
-				if (this.spoiled) return Promise.resolve('spoiled');
-				else return Promise.resolve('vote');
+	public validate(server: string, voter: Voter, election: Settings): Outcome {
+		if (this.voter !== voter.id) throw 'stolen';				//changed voterID (perhaps to another user)
+		if (!server) throw 'noGuild';														//changed serverID to other 18 digit code (for whatever reason)
+		if (!election.states.voting) throw 'state';					//voting period has closed
+		if (!election.type) throw 'state';
+		if (!(this.race in election.races)) throw 'noElection';
+		let race = election.races[this.race];						//changed channel (election) name to something invalid
+		if (!(this.voter in race.voters)) throw 'ineligible';		//changed channel name to other election not eligible for
+		if (this.zeroes) throw 'zeroes';							//added a zero [0] option
+		if (this.writeIn) throw 'badWriteIn';						//added a number [1] to 'Wrote-In'
+		if (this.duplicates) throw 'duplicates';					//wrote the same number next to more than one
+		if (!this.ascending) throw 'badOrder';						//added a zero [0] option
+		
+		//Check if candidates are still in the server live
+		//let votes = this.votes
+		//	.filter(vote => !vote || vote === 'blank' || this.Search.users.byTag(vote))					//so the this.votes[0] = false gets filtered to stay in
+		//	.map(vote => typeof vote === 'string' ? (vote === 'blank' ? 'blank' : this.Search.users.byTag(vote).id) : Date.now()); //here's where the date is added
+		//if (votes.length !== this.votes.length) throw 'missingUsers';
+		
+		if (race.voters[this.voter] && race.voters[this.voter][0]) {	//revote
+			if (Date.now() - race.voters[this.voter][0] > 1800000) throw 'timeout';		//trying to revote out of time (more than half a hour later)
+			else {
+				if (this.spoiled) return 'spoiled revote';
+				else return 'revote';
 			}
-		} catch (e) {
-			return Promise.reject(e);
+		} else {
+			if (this.spoiled) return 'spoiled';
+			else return 'vote';
 		}
 	}
 

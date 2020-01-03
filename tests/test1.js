@@ -3,7 +3,7 @@ const path = require('path');
 const Election = require('../dist/Election').default;
 const { randBetween } = require('../dist/utils/maths');
 
-const names = require('./names.json');
+const names = require('./data/userIDs.json');
 
 Function.prototype.toJSON = Function.prototype.toString;
 
@@ -139,7 +139,5 @@ election.addVoteFromBallot(election.getVoter('185412969130229760'),
 	'[2] Blank Vote'
 );
 
-Promise.resolve()
-	.then(fs.writeFileSync(path.join(__dirname, './ballots.json'), JSON.stringify(ballots, null, 4)))
-	.then(() => election.resolve())
-	.then(() => fs.writeFileSync(path.join(__dirname, './election.json'), JSON.stringify(election, null, 4)));
+fs.writeFileSync(path.join(__dirname, 'data', 'ballots.json'), JSON.stringify(ballots, null, 4));
+fs.writeFileSync(path.join(__dirname, 'data', 'election.json'), JSON.stringify(election, null, 4));

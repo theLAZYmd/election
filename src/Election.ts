@@ -331,14 +331,16 @@ export default class Election {
 	}
 
 	public addVoteFromBallot(voter: Voter, data: string): Election {
-		this.pendingPromises.push(new VoteMethods(this).parseBallot(data, this.id, voter)
-			.then(({ successes }) => {
-				successes.forEach((ballot) => {
-					this.votes[ballot.race + '.' + voter.id] = ballot.votes;
-					this.voters[voter.id].votes[ballot.race] = ballot.votes;
-				});
-			})
-		);		
+		let {successes} = new VoteMethods(this).parseBallot(data, this.id, voter);
+		successes.forEach((ballot) => {
+			this.votes[ballot.race + '.' + voter.id] = ballot.votes;
+			this.voters[voter.id].votes[ballot.race] = ballot.votes;
+		});
+		return this;
+	}
+
+	public addVote(voter: Voter, data: string[]): Election {
+		let vote = [Date.now(), ...data] as Vote;
 		return this;
 	}
 

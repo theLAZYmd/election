@@ -1,4 +1,5 @@
 dist/
+tests/**/*.json
 tests/*.json
 
 # Logs
