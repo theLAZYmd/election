@@ -2,7 +2,7 @@
 	"name": "election",
 	"version": "1.0.0",
 	"description": "Backend to run an election in Node.JS",
-	"main": "dist/index.js",
+	"main": "lib/index.js",
 	"scripts": {
 		"build": "tsc",
 		"buildMapped": "tsc --sourceMap",
@@ -22,6 +22,5 @@
 	"bugs": {
 		"url": "https://github.com/theLAZYmd/election/issues"
 	},
-	"homepage": "https://github.com/theLAZYmd/election#readme",
-	"files": ["lib/**/*"]
+	"homepage": "https://github.com/theLAZYmd/election#readme"
 }
