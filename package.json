@@ -1,5 +1,5 @@
 {
-	"name": "election=js",
+	"name": "election-js",
 	"version": "1.0.0",
 	"description": "A fully-fledged API to run an election in Node.JS with IRV, STV, and FPTP support",
 	"main": "lib/index.js",

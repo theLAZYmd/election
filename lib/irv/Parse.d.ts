@@ -1,0 +1,31 @@
+import Voter from '../Voter';
+import Settings from '../Election';
+import { Vote, Outcome, VotingErrors } from '../VoteInterfaces';
+export default class Parse {
+    private data;
+    constructor(data: string);
+    outcome: 'fulfilled' | 'rejected' | '';
+    status: Outcome | keyof VotingErrors;
+    message: string;
+    setOutcome(outcome: 'fulfilled' | 'rejected' | ''): Parse;
+    setStatus(status: Outcome | keyof VotingErrors): Parse;
+    setMessage(status: string): Parse;
+    private _matches?;
+    get ids(): string[];
+    get voter(): string;
+    get election(): string;
+    get race(): string;
+    private _lines?;
+    get lines(): string[];
+    private _raw?;
+    get raw(): [string, string][];
+    private _votes?;
+    get votes(): Vote;
+    get zeroes(): boolean;
+    get writeIn(): boolean;
+    get ascending(): boolean;
+    get duplicates(): boolean;
+    get spoiled(): boolean;
+    validate(server: string, voter: Voter, election: Settings): Outcome;
+    toJSON(): Vote;
+}

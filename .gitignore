@@ -1,6 +1,5 @@
 .vscode/
 *.code-workspace
-lib/
 tests/**/*.json
 tests/*.json
 
