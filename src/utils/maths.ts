@@ -33,16 +33,16 @@ export function clean<T>(arr: T[]): T[] {
 	return arr;
 }
 
-export function combine(arr: any[], r: number): any[][] {
-	let results = [] as any[][];
+export function combine<T>(arr: T[], r: number): T[][] {
+	let results = [] as T[][];
 	let n = arr.length;
-	function recursive(need: number, s: number, res: any[]) {
+	function recursive(need: number, s: number, res: T[]) {
 		if (need === 0) {
 			let b = res.slice(0);
 			results.push(b);
 			return;
 		}
-		for (let i = s; i < n; i++ ){
+		for (let i = s; i < n; i++){
 			let b = res.slice(0);
 			b.push(arr[i]); 
 			recursive(need - 1, i + 1, b);
@@ -50,4 +50,19 @@ export function combine(arr: any[], r: number): any[][] {
 	}	
 	recursive(r, 0, []);
 	return results;
+}
+
+export function randomPermutation<T>(arr: T[], count: number = 1, exclude: T[] = []): T[] {
+	for (let v of exclude) {
+		let index = arr.findIndex(element => element === v);
+		if (index === -1) continue;
+		arr.splice(index, 1);
+	}
+	let output = [] as T[];
+	for (let i = 0; i < count; i++) {
+		let index = randBetween(0, arr.length - 1);
+		output.push(arr[index]);
+		arr.splice(index, 1);
+	}
+	return output;
 }

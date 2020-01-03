@@ -20,10 +20,9 @@ export default class Ballot {
 	constructor(private voter: Voter, private races: Race[], private election: Election) {}
 	
 	get title(): string {
-		console.log(this.election.settings);
 		let name = (this.election.settings.name as Setting<string>).value || 'Election';
 		let date = (this.election.settings.date as Setting<number>).value;
-		if (!date) throw 'Election date must be defined';
+		if (date === undefined) throw 'Election date must be defined';
 		return name + ': ' + date;
 	}
 

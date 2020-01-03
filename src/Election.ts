@@ -1,14 +1,17 @@
-import { Setting, System, Threshold, States, InfoField } from './ElectionInterfaces';
-import { Vote } from './VoteInterfaces';
-import { Systems } from './utils/definitions';
-import { bold } from './utils/markdown';
 import Race from './Race';
 import Voter from './Voter';
 import Candidate from './Candidate';
-import { state } from "./utils/errors";
-import Ballot from "./irv/Ballot";
 import VoteMethods from './Vote';
+
+import { Setting, System, Threshold, States, InfoField } from './ElectionInterfaces';
+import { Vote } from './VoteInterfaces';
+import { Systems, Months } from './utils/definitions';
+import { bold } from './utils/markdown';
+import { state } from './utils/errors';
+
+import Ballot from './irv/Ballot';
 import Count from './irv/Count';
+import Parse from './irv/Parse';
 
 // An election is defined as a group of election parameters surrounding a set of 'races'
 
@@ -20,8 +23,7 @@ export default class Election {
 		register: false,
 		candidates: false,
 		voting: false,
-		count: false,
-		results: false
+		count: false
 	}
 
 	public get type() {
@@ -43,7 +45,8 @@ export default class Election {
 		date: {
 			value: new Date(Date.now()).getMonth(),
 			definition: 'number',
-			title: 'Date'
+			title: 'Date',
+			conversion: (key: number) => Months[key],
 		} as Setting<number>,
 		system: {
 			value: 'irv',
@@ -183,7 +186,15 @@ export default class Election {
 		return this;
 	}
 
-	public generateSettings(): InfoField[] {
+	public get settingsObject(): {[key: string]: string} {
+		return Object.entries(Object.assign({}, this.settings, this.candidateThresholds, this.voterThresholds))
+			.reduce((acc: {[key: string]: string}, [k, v]) => {
+				acc[k] = v.conversion ? v.conversion(v.value) : v.value.toString()
+				return acc;
+			}, {});		
+	}
+
+	public get settingsFields(): InfoField[] {
 		let fields = [] as InfoField[];
 		for (let s of Object.values(this.settings)) {
 			fields.push({
@@ -224,16 +235,16 @@ export default class Election {
 
 	/* GENERATE VOTERS */
 
-	public addRace(data: Race): Election {
+	public addRace(data: Race): Race {
 		let race = new Race(data, this);
 		this.races[race.id] = race;
-		return this;
+		return race;
 	}
 
-	public addVoter(data: Voter): Election {
+	public addVoter(data: Voter): Voter {
 		let voter = new Voter(data);
 		this.voters[voter.id] = voter;
-		return this;
+		return voter;
 	}
 
 	public getCounts(): {[key: string]: number} {
@@ -332,24 +343,33 @@ export default class Election {
 
 	public addVoteFromBallot(voter: Voter, data: string): Election {
 		let {successes} = new VoteMethods(this).parseBallot(data, this.id, voter);
-		successes.forEach((ballot) => {
-			this.votes[ballot.race + '.' + voter.id] = ballot.votes;
-			this.voters[voter.id].votes[ballot.race] = ballot.votes;
-		});
+		successes.forEach((ballot) => this.addVote(voter, ballot));
 		return this;
 	}
 
-	public addVote(voter: Voter, data: string[]): Election {
-		let vote = [Date.now(), ...data] as Vote;
+	//Dangerous! No validation
+	public addVote(voter: Voter, ballot: Parse): Election {
+		if (voter.id !== ballot.voter) throw VoteMethods.prototype.reject('stolen');
+		if (typeof ballot.votes[0] !== 'number') throw 'Invalid vote format\n' + JSON.stringify(ballot.votes, null, 4);
+		if (!ballot.votes.slice(1).every(v => typeof v === 'string')) throw 'Invalid vote format\n' + JSON.stringify(ballot.votes, null, 4);
+		this.setVote(ballot);
 		return this;
+	}
+
+	private setVote(ballot: Parse) {
+		this.votes[ballot.race + '.' + ballot.voter] = ballot.votes;
+		this.races[ballot.race].validVotes[ballot.voter] = ballot.votes;
+		this.voters[ballot.voter].votes[ballot.race] = ballot.votes;
 	}
 
 	public countVotes() {
+		this.setState('register', false);
 		this.setState('count', true);
 		let results = {} as {[key: string]: Count};
 		for (let [id, race] of Object.entries(this.races)) {
-			results[id] = new Count(Object.keys(race.candidates), Object.values(race.validVotes).map(vote => vote.slice(1) as string[]));
-			results[id].rank();
+			let candidates = Object.keys(race.candidates);
+			let votes = Object.values(race.validVotes).map(vote => vote.slice(1) as string[]);
+			results[id] = new Count(candidates, votes);
 		}
 		this.results = results;
 		return this;
@@ -371,8 +391,9 @@ export default class Election {
 		return {
 			id: this.id,
 			states: this.states,
-			settings: this.generateSettings(),
+			settings: this.settingsObject,
 			races: this.races,
+			results: this.results,
 			voters: this.voters,
 			votes: this.votes
 		};

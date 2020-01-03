@@ -2,6 +2,7 @@ import { Vote } from './VoteInterfaces';
 import Candidate from './Candidate';
 import Voter from './Voter';
 import Election from './Election';
+import { randBetween, randomPermutation } from './utils/maths';
 
 export default class Race {
 
@@ -27,6 +28,30 @@ export default class Race {
 
 	static setTransferredProperties(properties: string[]): void {
 		Race.properties = properties;
+	}
+
+	public get candidatesLength(): number {
+		return Object.keys(this.candidates).length;
+	}
+
+	private eligibleCache: Map<string, Voter[]> = new Map();
+
+	public get eligibleVoters(): Voter[] {
+		let key = JSON.stringify(this.election.voters);
+		if (this.eligibleCache.get(key)) return this.eligibleCache.get(key) as Voter[];
+		let value = Object.values(this.election.voters).filter(v => v.isEligible(this.id));
+		this.eligibleCache.set(key, value);
+		return value;
+	}
+
+	public getRandomVoter(exclude: string[] = []): Voter {
+		return this.getRandomVoters(1, exclude)[0];
+	}
+
+	public getRandomVoters(count: number = 1, exclude: string[] = []): Voter[] {
+		let voters = this.eligibleVoters;
+		return randomPermutation(voters.map(v => v.id), count, exclude)
+			.map(id => voters.find(v => v.id === id) as Voter);
 	}
 
 	public upgradeToCandidate(voter: Voter): Race {

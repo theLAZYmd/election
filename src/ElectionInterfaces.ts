@@ -34,8 +34,7 @@ export interface States {
 	register: boolean,
 	candidates: boolean,
 	voting: boolean,
-	count: boolean,
-	results: boolean
+	count: boolean
 }
 
 export interface Field {

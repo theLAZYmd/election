@@ -29,3 +29,8 @@ export function clean<T>(arr: T[]): T[] {
 	}
 	return arr;
 }
+
+export function randomElement<T>(arr: T[]): T {
+	let index = randBetween(0, arr.length - 1);
+	return arr[index];
+}

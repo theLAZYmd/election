@@ -29,11 +29,10 @@ function generateVotes(n) {
 	return arr;
 }
 
-let votes = generateVotes(200);
+let votes = [];// generateVotes(200);
 
-IRV.setWinnerThreshold(2);
-IRV.useSTV();
+//IRV.setWinnerThreshold(2);
+//IRV.useSTV();
 let trial = new IRV(candidates, votes);
-trial.rank();
 
-fs.writeFileSync(path.join(__dirname, './irv.json'), JSON.stringify(trial, null, 4));
+fs.writeFileSync(path.join(__dirname, 'data', 'irv.json'), JSON.stringify(trial, null, 4));

@@ -25,9 +25,7 @@ export default class Count {
 		this.totalCount = {};
 		
 		if (Count.STV) this.quota = Math.floor(this.votes.length / (Count.winnerThreshold + 1)) + 1;
-	}
 
-	public rank() {
 		this.totalCount = this.initialCount();
 		this.rounds.push(mapToLengths(this.totalCount));
 		this.getWinner();
@@ -38,6 +36,7 @@ export default class Count {
 			this.eliminate(eliminees);
 			this.rounds.push(mapToLengths(this.totalCount));
 			this.getWinner();
+			if (!this.candidatesLeft) break;
 		};
 	}
 

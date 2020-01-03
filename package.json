@@ -1,6 +1,6 @@
 {
 	"name": "election",
-	"version": "0.0.3",
+	"version": "1.0.0",
 	"description": "Backend to run an election in Node.JS",
 	"main": "dist/index.js",
 	"scripts": {
@@ -22,5 +22,6 @@
 	"bugs": {
 		"url": "https://github.com/theLAZYmd/election/issues"
 	},
-	"homepage": "https://github.com/theLAZYmd/election#readme"
+	"homepage": "https://github.com/theLAZYmd/election#readme",
+	"files": ["lib/**/*"]
 }

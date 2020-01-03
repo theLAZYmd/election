@@ -9,11 +9,11 @@ export default class VoteMethods {
 
 	constructor(private election: Settings) {};
 
-	private resolve(output: Outcome, voter: Voter, election: string): string {
+	public resolve(output: Outcome, voter: Voter, election: string): string {
 		return Successes(output, voter, election);
 	}
 
-	private reject(output: keyof VotingErrors): string {
+	public reject(output: keyof VotingErrors): string {
 		return Errors[output];
 	}
 

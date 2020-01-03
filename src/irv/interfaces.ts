@@ -1,5 +1,3 @@
-import Count from "./Count";
-
 export type Vote = string[];
 
 export interface BooleanDictionary {

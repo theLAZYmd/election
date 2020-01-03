@@ -19,6 +19,21 @@ export const Systems: System[] = [
 	}
 ]
 
+export const Months = [
+	'January',
+	'February',
+	'March',
+	'April',
+	'May',
+	'June',
+	'July',
+	'August',
+	'September',
+	'October',
+	'November',
+	'December'
+]
+
 export const VotingErrors = {
 	stolen: 'This ballot does not match your registered voter ID.\nPlease do not make any unauthorised modifications to your ballot.',
 	noGuild: 'Couldn\'t find server to submit vote for.\nPlease do not make any unauthorised modifications to your ballot.',
